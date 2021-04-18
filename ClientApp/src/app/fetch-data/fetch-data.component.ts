@@ -1,23 +1,32 @@
-import { Component, Inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { PokemonService } from '../services/pokemon.service';
+import { Component } from '@angular/core';
+import { saveAs } from "file-saver";
 
 @Component({
   selector: 'app-fetch-data',
   templateUrl: './fetch-data.component.html'
 })
 export class FetchDataComponent {
-  public forecasts: WeatherForecast[];
+  pokemons: any;
+  query: string;
+  file: string;
 
-  constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
-    http.get<WeatherForecast[]>(baseUrl + 'weatherforecast').subscribe(result => {
-      this.forecasts = result;
-    }, error => console.error(error));
+  constructor(private service: PokemonService){};
+
+  ngOnInit(){
+    this.service.getPokemon()
+    .subscribe(pokemons => this.pokemons = pokemons);
   }
-}
 
-interface WeatherForecast {
-  date: string;
-  temperatureC: number;
-  temperatureF: number;
-  summary: string;
+  onSearch(query){
+    this.service.getPokemonByName(this.query)
+    .subscribe(pokemons => this.pokemons = pokemons);
+  }
+
+  onDownload(name){
+    this.service.downloadPokemon(name).subscribe(response => {
+      const blob = new Blob([JSON.stringify(response.body)], { type: 'text/plain' });
+      saveAs(blob, 'MyPokemon.txt');
+    });
+  }
 }

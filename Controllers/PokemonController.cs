@@ -3,76 +3,93 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 using PokeApi.Models;
+using Newtonsoft.Json;
+using System.Text;
+using System.IO;
 
 namespace PokeApi.Controllers
 {
     [ApiController]
     public class PokemonController : ControllerBase
     {
-        private static readonly HttpClient client = new HttpClient();
-        private IEnumerable<Pokemon> pokemons;
-        private string errorString;
+        private readonly IHttpClientFactory clientFactory;
+        private List<Pokemon> pokemonList;
+        private string url = "http://pokeapi.co/api/v2/pokemon?limit=2000";
 
-        public PokemonController()
+
+        public PokemonController(IHttpClientFactory clientFactory)
         {
-            this.pokemons = new List<Pokemon>();
+            this.clientFactory = clientFactory;
+            pokemonList = new List<Pokemon>();
         }
 
+        [HttpGet]
         [Route("/api/pokemon")]
-
-        public async Task<string> GetPokemon()
+        public async Task<IActionResult> GetPokemon()
         {
-            string baseUrl = "http://pokeapi.co/api/v2/pokemon?limit=2000";
             try
             {
-                var response = await client.GetAsync(baseUrl);
-                var content = response.Content;
-                var data = await content.ReadAsStringAsync();
-                if (content != null)
-                {
-                    var pokemons = JObject.Parse(data)["results"].ToString();
-                    return pokemons;
-                }
-                else
-                {
-                    errorString = "Loading...";
-                    return errorString;
-                }
+                var client = clientFactory.CreateClient();
+                var response = await client.GetAsync(url);
+                var json = await response.Content.ReadAsStringAsync();
+                var data = JsonConvert.DeserializeObject<RootObject>(json);
+                return Ok(data.Results);
             }
             catch (Exception ex)
             {
-                errorString = $"Error: {ex}";
-                return errorString;
+                return NotFound($"Pokemons not found. Contact the Pokemon Master. {ex}");
             }
         }
 
-        [HttpGet("/api/pokemon/{id:int}")]
-        public async Task<string> GetOnePokemon(int id)
+        [HttpGet]
+        [Route("/api/pokemon/{name}")]
+        public async Task<IActionResult> GetPokemonByName(string name)
         {
-            string baseURL = $"http://pokeapi.co/api/v2/pokemon/{id}/";
             try
             {
-                var response = await client.GetAsync(baseURL);
-                var content = response.Content;
-                var data = await content.ReadAsStringAsync();
-                if (data != null)
+                var client = clientFactory.CreateClient();
+                var response = await client.GetAsync(url);
+                var json = await response.Content.ReadAsStringAsync();
+                var data = JsonConvert.DeserializeObject<RootObject>(json);
+
+                foreach (var pokemon in data.Results)
                 {
-                    var dataObj = JObject.Parse(data)["species"].ToString();
-                    return dataObj;
+                    if (pokemon.Name == name)
+                    {
+                        pokemonList.Clear();
+                        pokemonList.Add(pokemon);
+                        return Ok(pokemonList);
+                    }
+                    else if (pokemon.Name.Contains(name))
+                    {
+                        pokemonList.Add(pokemon);
+                    }
                 }
-                else
-                {
-                    errorString = "Loading...";
-                    return errorString;
-                }
+                return Ok(pokemonList);
             }
             catch (Exception ex)
             {
-                errorString = $"Error: {ex}";
-                return errorString;
+                return NotFound($"Pokemon not found. Maybe it's not a pokemon name. {ex}");
             }
+        }
+
+        [HttpGet]
+        [Route("/api/pokemon/{name}/download")]
+        public async Task<FileStreamResult> DownloadPokemon(string name)
+        {
+            var url = $"http://pokeapi.co/api/v2/pokemon/{name}";
+            var client = clientFactory.CreateClient();
+            var response = await client.GetStringAsync(url);
+            // return Content(response, "text/plain");
+            // return File(Encoding.UTF8.GetBytes(response), "text/plain", "MyPokemon.txt");
+            
+            Stream stream = new MemoryStream(Encoding.UTF8.GetBytes(response));
+            string mimeType = "text/plain";
+            return new FileStreamResult(stream, mimeType)
+            {
+                FileDownloadName = "MyPokemon.txt"
+            };
         }
     }
 }

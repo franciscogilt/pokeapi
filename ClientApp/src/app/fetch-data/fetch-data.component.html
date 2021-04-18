@@ -1,24 +1,28 @@
-<h1 id="tableLabel">Weather forecast</h1>
-
-<p>This component demonstrates fetching data from the server.</p>
-
-<p *ngIf="!forecasts"><em>Loading...</em></p>
-
-<table class='table table-striped' aria-labelledby="tableLabel" *ngIf="forecasts">
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Temp. (C)</th>
-      <th>Temp. (F)</th>
-      <th>Summary</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let forecast of forecasts">
-      <td>{{ forecast.date }}</td>
-      <td>{{ forecast.temperatureC }}</td>
-      <td>{{ forecast.temperatureF }}</td>
-      <td>{{ forecast.summary }}</td>
-    </tr>
-  </tbody>
-</table>
+<p *ngIf="!pokemons"><em>Loading...</em></p>
+<div class="container">
+  <h1 id="tableLabel">Pokemon List</h1>
+  <div class="row">
+    <div class="col-lg-4">
+      <div class="form-group">
+        <input class="form-control" type="text" id="query" name="query" (keyup.enter)="onSearch()" [(ngModel)]="query">
+      </div>
+    </div>
+    <div class="col-lg-2">
+      <button class="btn btn-primary" (click)="onSearch()">Search</button>
+    </div>
+  </div>
+  <table class='table table-striped' aria-labelledby="tableLabel" *ngIf="pokemons">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let pokemon of pokemons">
+        <td>{{ pokemon.name }}</td>
+        <td><button type="button" class="btn btn-dark" (click)="onDownload(pokemon.name)">Download</button></td>
+      </tr>
+    </tbody>
+  </table>
+</div>

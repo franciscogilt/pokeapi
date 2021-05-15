@@ -4,6 +4,7 @@
 This is a test project to provide a **[.NET](https://dotnet.microsoft.com) Core Web API** to serve information about pokemons to a SPA with Angular to show a list of pokemons and download a text file with the information about one specific pokemon.
 
 ## Project Setup
+* Install **[.NET Core 3.1 SDK](https://dotnet.microsoft.com/download)**
 * Clone and Run
 ```
 $ git clone https://github.com/franciscogilt/pokeapi

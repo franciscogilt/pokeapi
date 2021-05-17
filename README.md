@@ -13,7 +13,7 @@ $ dotnet run
 ```
 
 ## API Endpoints
-* **Pokémon**
+* **Pokemon**
 
 | Type | Request | Description |
 | :-: | :-: | :-: |
